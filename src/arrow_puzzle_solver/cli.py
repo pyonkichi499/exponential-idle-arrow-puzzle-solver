@@ -4,6 +4,7 @@ import click
 import numpy as np
 from .board import Board
 from .solver import Solver
+from .automation import PuzzleAutomator, calibrate_click_timing
 
 
 def parse_board_input(input_str: str, size: int = 7) -> Board:
@@ -157,6 +158,78 @@ def demo():
         print()
     else:
         print("\n✗ Failed to solve the demo puzzle")
+
+
+@cli.command()
+@click.option(
+    "--mode",
+    type=click.Choice(["normal", "hard", "expert"]),
+    default="expert",
+    help="Solving mode",
+)
+@click.option(
+    "--region",
+    nargs=4,
+    type=int,
+    help="Screen region as 'x y width height' (if not provided, interactive selection)",
+)
+@click.option(
+    "--continuous",
+    is_flag=True,
+    help="Continuously solve puzzles in the same region",
+)
+@click.option(
+    "--click-delay",
+    default=0.1,
+    type=float,
+    help="Delay between clicks in seconds",
+)
+@click.option(
+    "--solve-delay",
+    default=2.0,
+    type=float,
+    help="Delay between solving puzzles in continuous mode",
+)
+@click.option(
+    "--max-puzzles",
+    type=int,
+    help="Maximum number of puzzles to solve in continuous mode",
+)
+def auto_solve(mode, region, continuous, click_delay, solve_delay, max_puzzles):
+    """Automatically solve puzzles on screen using image recognition and mouse clicks."""
+    automator = PuzzleAutomator(click_delay=click_delay)
+
+    if region:
+        # Use provided region
+        x, y, w, h = region
+        screen_region = (x, y, w, h)
+        print(f"Using region: x={x}, y={y}, width={w}, height={h}")
+    else:
+        # Interactive region selection
+        print("Please select the puzzle region on screen...")
+        if not automator.solve_interactive(mode):
+            return
+        # For continuous mode, we need to get the region
+        if continuous:
+            print("Note: Continuous mode requires --region parameter")
+            return
+
+    if continuous and region:
+        # Continuous solving mode
+        automator.continuous_solve(
+            screen_region, mode=mode, solve_delay=solve_delay, max_puzzles=max_puzzles
+        )
+    elif region:
+        # Single solve with provided region
+        automator.solve_from_region(screen_region, mode)
+
+
+@cli.command()
+def calibrate():
+    """Calibrate click timing for optimal performance."""
+    recommended_delay = calibrate_click_timing()
+    print(f"\nRecommended --click-delay: {recommended_delay}")
+    print(f"Use: arrow-puzzle-solver auto-solve --click-delay {recommended_delay}")
 
 
 if __name__ == "__main__":
