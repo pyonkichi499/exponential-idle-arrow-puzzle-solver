@@ -62,6 +62,22 @@ rye run python -m arrow_puzzle_solver generate --size 7 --difficulty medium
 rye run python -m arrow_puzzle_solver demo
 ```
 
+#### Automatically solve puzzles on screen
+
+```bash
+# Interactive region selection
+rye run python -m arrow_puzzle_solver auto-solve
+
+# With specific region
+rye run python -m arrow_puzzle_solver auto-solve --region 100 200 500 500
+
+# Continuous mode
+rye run python -m arrow_puzzle_solver auto-solve --region 100 200 500 500 --continuous
+
+# Calibrate click timing
+rye run python -m arrow_puzzle_solver calibrate
+```
+
 ### Python API
 
 You can also use the solver programmatically:
@@ -104,6 +120,48 @@ An advanced strategy for difficult puzzles:
 2. Encode bottom row information onto the top row
 3. Apply specific tap sequences based on bottom row values
 4. Propagate again from the top
+
+## Automatic Screen Solving
+
+The solver can automatically detect and solve puzzles displayed on your screen:
+
+### Features
+- **Screen capture and puzzle detection**: Automatically finds puzzle grids on screen
+- **Interactive region selection**: Click and drag to select puzzle area
+- **Automatic mouse clicking**: Executes solution with configurable delays
+- **Continuous mode**: Solve multiple puzzles automatically
+
+### Usage
+```bash
+# Interactive mode - select region with mouse
+rye run python -m arrow_puzzle_solver auto-solve
+
+# Specify exact region (x, y, width, height)
+rye run python -m arrow_puzzle_solver auto-solve --region 100 200 500 500
+
+# Continuous solving
+rye run python -m arrow_puzzle_solver auto-solve --region 100 200 500 500 --continuous --max-puzzles 10
+
+# Adjust click timing
+rye run python -m arrow_puzzle_solver auto-solve --click-delay 0.2
+```
+
+### Calibration
+For optimal performance, calibrate the click timing for your system:
+```bash
+rye run python -m arrow_puzzle_solver calibrate
+```
+
+### Important Notes on Screen Recognition
+
+**⚠️ The current image recognition implementation is a proof of concept and has not been tested with actual Exponential Idle gameplay.**
+
+- The digit recognition uses a simple pixel ratio heuristic that will likely need adjustment for actual game graphics
+- For production use, you should:
+  - Capture actual game screenshots of digits 0-4
+  - Implement proper template matching or OCR
+  - Test and calibrate the grid detection for your specific game resolution
+- The current implementation serves as a framework that can be adapted once actual game assets are available
 
 ## Input Format
 
@@ -156,6 +214,7 @@ rye run ruff src/ tests/
 - Not all randomly generated puzzles may be solvable with the current algorithm
 - The algorithm is designed for puzzles that appear in Exponential Idle, which are guaranteed to be solvable
 - Currently supports square boards (default 7x7)
+- **Image recognition for auto-solve is not production-ready** - see [KNOWN_ISSUES.md](KNOWN_ISSUES.md) for details
 
 ## Examples
 

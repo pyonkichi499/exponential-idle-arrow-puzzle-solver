@@ -62,6 +62,22 @@ rye run python -m arrow_puzzle_solver generate --size 7 --difficulty medium
 rye run python -m arrow_puzzle_solver demo
 ```
 
+#### 画面上のパズルを自動的に解く
+
+```bash
+# インタラクティブな領域選択
+rye run python -m arrow_puzzle_solver auto-solve
+
+# 特定の領域を指定
+rye run python -m arrow_puzzle_solver auto-solve --region 100 200 500 500
+
+# 連続モード
+rye run python -m arrow_puzzle_solver auto-solve --region 100 200 500 500 --continuous
+
+# クリックタイミングの調整
+rye run python -m arrow_puzzle_solver calibrate
+```
+
 ### Python API
 
 プログラムから使用することも可能です：
@@ -104,6 +120,48 @@ else:
 2. 最下行の情報を最上行にエンコード
 3. 最下行の値に基づいて特定のタップシーケンスを適用
 4. 再度上からPropagationを実行
+
+## 画面自動解法
+
+ソルバーは画面に表示されたパズルを自動的に検出して解くことができます：
+
+### 機能
+- **画面キャプチャとパズル検出**: 画面上のパズルグリッドを自動的に見つけます
+- **インタラクティブな領域選択**: クリック＆ドラッグでパズル領域を選択
+- **自動マウスクリック**: 設定可能な遅延で解法を実行
+- **連続モード**: 複数のパズルを自動的に解く
+
+### 使用方法
+```bash
+# インタラクティブモード - マウスで領域を選択
+rye run python -m arrow_puzzle_solver auto-solve
+
+# 正確な領域を指定 (x, y, 幅, 高さ)
+rye run python -m arrow_puzzle_solver auto-solve --region 100 200 500 500
+
+# 連続解法
+rye run python -m arrow_puzzle_solver auto-solve --region 100 200 500 500 --continuous --max-puzzles 10
+
+# クリックタイミングの調整
+rye run python -m arrow_puzzle_solver auto-solve --click-delay 0.2
+```
+
+### キャリブレーション
+最適なパフォーマンスのために、システムに合わせてクリックタイミングを調整してください：
+```bash
+rye run python -m arrow_puzzle_solver calibrate
+```
+
+### 画面認識に関する重要な注意事項
+
+**⚠️ 現在の画像認識実装は概念実証であり、実際のExponential Idleでのゲームプレイではテストされていません。**
+
+- 数字認識は単純なピクセル比率を使用しており、実際のゲームグラフィックスには調整が必要です
+- 本番環境での使用には：
+  - 実際のゲームから数字0-4のスクリーンショットをキャプチャ
+  - 適切なテンプレートマッチングまたはOCRの実装
+  - 特定のゲーム解像度に合わせたグリッド検出のテストと調整
+- 現在の実装は、実際のゲームアセットが利用可能になった際に適応できるフレームワークとして機能します
 
 ## 入力フォーマット
 
@@ -156,6 +214,7 @@ rye run ruff src/ tests/
 - 現在のアルゴリズムでは、ランダムに生成された全てのパズルが解けるわけではありません
 - このアルゴリズムは、解けることが保証されているExponential Idleのパズル用に設計されています
 - 現在は正方形のボード（デフォルト7x7）のみサポートしています
+- **自動解法の画像認識は本番環境での使用準備ができていません** - 詳細は[KNOWN_ISSUES-JP.md](KNOWN_ISSUES-JP.md)を参照
 
 ## 例
 
