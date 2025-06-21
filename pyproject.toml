@@ -1,0 +1,32 @@
+[project]
+name = "arrow-puzzle-solver"
+version = "0.1.0"
+description = "A library for solving arrow puzzles from Exponential Idle game"
+authors = [
+    { name = "pyonkichi499", email = "hrs499944@gmail.com" }
+]
+dependencies = [
+    "numpy>=1.24.0",
+    "click>=8.0.0",
+]
+readme = "README.md"
+requires-python = ">= 3.8"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/arrow_puzzle_solver"]
