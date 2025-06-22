@@ -15,12 +15,15 @@ click==8.2.1
 mouseinfo==0.1.3
     # via pyautogui
 numpy==2.3.1
-    # via opencv-python
+    # via opencv-python-headless
     # via puzzle-solver
-opencv-python==4.11.0.86
+opencv-python-headless==4.11.0.86
     # via puzzle-solver
+packaging==25.0
+    # via pytesseract
 pillow==11.2.1
     # via puzzle-solver
+    # via pytesseract
 pyautogui==0.9.54
     # via puzzle-solver
 pygetwindow==0.0.9
@@ -41,6 +44,8 @@ pyrect==0.2.0
     # via pygetwindow
 pyscreeze==1.0.1
     # via pyautogui
+pytesseract==0.3.13
+    # via puzzle-solver
 pytweening==1.2.0
     # via pyautogui
 rubicon-objc==0.5.1

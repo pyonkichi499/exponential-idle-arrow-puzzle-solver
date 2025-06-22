@@ -4,6 +4,8 @@ import cv2
 import numpy as np
 from typing import List, Tuple, Optional, Dict
 import pyautogui
+from pathlib import Path
+import json
 from ...core import BaseVision
 from .board import ArrowBoard
 
@@ -19,7 +21,9 @@ class ArrowVision(BaseVision):
         """
         super().__init__()
         self.grid_size = grid_size
+        self.templates_dir = Path(__file__).parent / "templates"
         self.cell_templates = self._load_cell_templates()
+        self.calibration_data = self._load_calibration_data()
         
     def _load_cell_templates(self) -> Dict[int, np.ndarray]:
         """Load or create templates for each cell value (0-4).
@@ -27,10 +31,41 @@ class ArrowVision(BaseVision):
         Returns:
             Dictionary mapping cell values to template images
         """
-        # For now, we'll use simple digit recognition
-        # In a real implementation, you would load actual game screenshots
         templates = {}
+        
+        # テンプレート画像が存在する場合は読み込む
+        if self.templates_dir.exists():
+            for i in range(5):
+                template_path = self.templates_dir / f"digit_{i}.png"
+                if template_path.exists():
+                    template = cv2.imread(str(template_path), cv2.IMREAD_GRAYSCALE)
+                    if template is not None:
+                        templates[i] = template
+        
         return templates
+    
+    def _load_calibration_data(self) -> Dict:
+        """Load calibration data if exists.
+        
+        Returns:
+            Calibration data dictionary
+        """
+        calibration_file = self.templates_dir / "calibration.json"
+        if calibration_file.exists():
+            with open(calibration_file, 'r') as f:
+                return json.load(f)
+        return {
+            "cell_size": None,
+            "grid_color_range": None,
+            "digit_color_range": None,
+            "threshold_values": {
+                "0": {"min": 0.0, "max": 0.15},
+                "1": {"min": 0.15, "max": 0.35},
+                "2": {"min": 0.35, "max": 0.55},
+                "3": {"min": 0.55, "max": 0.75},
+                "4": {"min": 0.75, "max": 1.0}
+            }
+        }
     
     def detect_puzzle(self, image: np.ndarray) -> Optional[Tuple[int, int, int, int]]:
         """Detect the puzzle grid in the image.
@@ -44,28 +79,73 @@ class ArrowVision(BaseVision):
         # Convert to grayscale
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         
-        # Apply edge detection
-        edges = cv2.Canny(gray, 50, 150)
+        # Apply adaptive thresholding for better edge detection
+        thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                                     cv2.THRESH_BINARY, 11, 2)
+        
+        # Apply morphological operations to clean up the image
+        kernel = np.ones((3, 3), np.uint8)
+        thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
         
         # Find contours
-        contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        # Sort contours by area (largest first)
+        contours = sorted(contours, key=cv2.contourArea, reverse=True)
         
         # Look for square-like contours that could be the grid
-        for contour in contours:
+        for contour in contours[:10]:  # Check only the 10 largest contours
             # Approximate the contour
             epsilon = 0.02 * cv2.arcLength(contour, True)
             approx = cv2.approxPolyDP(contour, epsilon, True)
             
             # Check if it's roughly square
-            if len(approx) == 4:
+            if len(approx) >= 4:
                 x, y, w, h = cv2.boundingRect(contour)
                 aspect_ratio = float(w) / h
+                area = w * h
                 
-                # Check if aspect ratio is close to 1 (square)
-                if 0.8 <= aspect_ratio <= 1.2 and w > 100 and h > 100:
-                    return (x, y, w, h)
+                # Check if aspect ratio is close to 1 (square) and has reasonable size
+                if 0.9 <= aspect_ratio <= 1.1 and area > 10000:
+                    # Additional check: verify it has a grid-like structure
+                    if self._verify_grid_structure(gray[y:y+h, x:x+w]):
+                        return (x, y, w, h)
         
         return None
+    
+    def _verify_grid_structure(self, roi: np.ndarray) -> bool:
+        """Verify if the ROI contains a grid structure.
+        
+        Args:
+            roi: Region of interest (grayscale)
+            
+        Returns:
+            True if grid structure is detected
+        """
+        # Apply edge detection
+        edges = cv2.Canny(roi, 50, 150)
+        
+        # Detect lines using Hough transform
+        lines = cv2.HoughLinesP(edges, 1, np.pi/180, 50, minLineLength=50, maxLineGap=10)
+        
+        if lines is None:
+            return False
+        
+        # Count horizontal and vertical lines
+        horizontal_lines = 0
+        vertical_lines = 0
+        
+        for line in lines:
+            x1, y1, x2, y2 = line[0]
+            angle = np.abs(np.arctan2(y2 - y1, x2 - x1) * 180 / np.pi)
+            
+            if angle < 10 or angle > 170:  # Horizontal
+                horizontal_lines += 1
+            elif 80 < angle < 100:  # Vertical
+                vertical_lines += 1
+        
+        # Expect at least grid_size lines in each direction
+        return horizontal_lines >= self.grid_size and vertical_lines >= self.grid_size
     
     def extract_cells(self, image: np.ndarray, grid_bounds: Tuple[int, int, int, int]) -> List[List[np.ndarray]]:
         """Extract individual cells from the grid.
@@ -85,9 +165,14 @@ class ArrowVision(BaseVision):
         for row in range(self.grid_size):
             row_cells = []
             for col in range(self.grid_size):
-                cell_x = x + col * cell_width
-                cell_y = y + row * cell_height
-                cell = image[cell_y:cell_y + cell_height, cell_x:cell_x + cell_width]
+                # Extract cell with some margin to avoid grid lines
+                margin = max(2, min(cell_width, cell_height) // 10)
+                cell_x = x + col * cell_width + margin
+                cell_y = y + row * cell_height + margin
+                cell_w = cell_width - 2 * margin
+                cell_h = cell_height - 2 * margin
+                
+                cell = image[cell_y:cell_y + cell_h, cell_x:cell_x + cell_w]
                 row_cells.append(cell)
             cells.append(row_cells)
         
@@ -102,30 +187,84 @@ class ArrowVision(BaseVision):
         Returns:
             Recognized digit (0-4)
         """
-        # Convert to grayscale
-        gray = cv2.cvtColor(cell_image, cv2.COLOR_BGR2GRAY)
+        # Convert to grayscale if needed
+        if len(cell_image.shape) == 3:
+            gray = cv2.cvtColor(cell_image, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = cell_image
         
+        # If we have templates, use template matching
+        if self.cell_templates:
+            return self._recognize_by_template_matching(gray)
+        
+        # Otherwise, use feature-based recognition
+        return self._recognize_by_features(gray)
+    
+    def _recognize_by_template_matching(self, gray: np.ndarray) -> int:
+        """Recognize digit using template matching.
+        
+        Args:
+            gray: Grayscale cell image
+            
+        Returns:
+            Recognized digit (0-4)
+        """
+        best_match = -1
+        best_score = -1
+        
+        for digit, template in self.cell_templates.items():
+            # Resize template to match cell size
+            template_resized = cv2.resize(template, (gray.shape[1], gray.shape[0]))
+            
+            # Apply template matching
+            result = cv2.matchTemplate(gray, template_resized, cv2.TM_CCOEFF_NORMED)
+            score = result.max()
+            
+            if score > best_score:
+                best_score = score
+                best_match = digit
+        
+        # If confidence is too low, fall back to feature-based
+        if best_score < 0.7:
+            return self._recognize_by_features(gray)
+        
+        return best_match
+    
+    def _recognize_by_features(self, gray: np.ndarray) -> int:
+        """Recognize digit using image features.
+        
+        Args:
+            gray: Grayscale cell image
+            
+        Returns:
+            Recognized digit (0-4)
+        """
         # Apply thresholding
-        _, thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
+        _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         
-        # WARNING: This is a placeholder implementation!
-        # The pixel ratio thresholds below are NOT calibrated for actual game graphics
-        # and will need to be adjusted based on real game screenshots.
-        
-        # Count white pixels as a simple heuristic
-        white_pixels = cv2.countNonZero(thresh)
+        # Calculate features
         total_pixels = thresh.shape[0] * thresh.shape[1]
-        white_ratio = white_pixels / total_pixels
+        white_pixels = cv2.countNonZero(thresh)
+        black_pixels = total_pixels - white_pixels
         
-        # Map white ratio to digits (this is a placeholder)
-        # These thresholds are arbitrary and need calibration with actual game assets
-        if white_ratio < 0.1:
+        # Calculate density (ratio of dark pixels)
+        density = black_pixels / total_pixels
+        
+        # Use calibrated thresholds if available
+        thresholds = self.calibration_data.get("threshold_values", {})
+        
+        for digit_str, ranges in thresholds.items():
+            if ranges["min"] <= density < ranges["max"]:
+                return int(digit_str)
+        
+        # Fallback to default thresholds
+        if density < 0.15:
             return 0
-        elif white_ratio < 0.3:
+        elif density < 0.35:
             return 1
-        elif white_ratio < 0.5:
+        elif density < 0.55:
             return 2
-        elif white_ratio < 0.7:
+        elif density < 0.75:
             return 3
         else:
             return 4
@@ -190,21 +329,73 @@ class ArrowVision(BaseVision):
         
         return coordinates
     
-    def calibrate(self, reference_image: np.ndarray) -> bool:
+    def calibrate(self, reference_image: np.ndarray, known_values: List[List[int]]) -> bool:
         """Calibrate detection for specific game graphics.
         
         Args:
             reference_image: Reference image with known puzzle state
+            known_values: 2D list of known cell values
             
         Returns:
             True if calibration successful, False otherwise
         """
-        # TODO: Implement calibration logic
-        # This would involve:
-        # 1. Detecting the grid in the reference image
-        # 2. Extracting digit templates
-        # 3. Storing templates for future recognition
-        return False
+        # Detect grid in reference image
+        grid_bounds = self.detect_puzzle(reference_image)
+        if not grid_bounds:
+            print("Failed to detect grid in reference image")
+            return False
+        
+        # Extract cells
+        cells = self.extract_cells(reference_image, grid_bounds)
+        
+        # Create templates directory if it doesn't exist
+        self.templates_dir.mkdir(exist_ok=True)
+        
+        # Extract and save templates for each digit
+        digit_samples = {i: [] for i in range(5)}
+        
+        for row in range(self.grid_size):
+            for col in range(self.grid_size):
+                digit = known_values[row][col]
+                cell = cells[row][col]
+                digit_samples[digit].append(cell)
+        
+        # Save representative templates
+        for digit, samples in digit_samples.items():
+            if samples:
+                # Use the first sample as template (could be improved by averaging)
+                template = samples[0]
+                template_path = self.templates_dir / f"digit_{digit}.png"
+                cv2.imwrite(str(template_path), template)
+        
+        # Calculate threshold values based on samples
+        threshold_values = {}
+        for digit, samples in digit_samples.items():
+            if samples:
+                densities = []
+                for sample in samples:
+                    gray = cv2.cvtColor(sample, cv2.COLOR_BGR2GRAY) if len(sample.shape) == 3 else sample
+                    _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+                    density = (gray.shape[0] * gray.shape[1] - cv2.countNonZero(thresh)) / (gray.shape[0] * gray.shape[1])
+                    densities.append(density)
+                
+                min_density = min(densities) - 0.05
+                max_density = max(densities) + 0.05
+                threshold_values[str(digit)] = {"min": min_density, "max": max_density}
+        
+        # Save calibration data
+        self.calibration_data["threshold_values"] = threshold_values
+        self.calibration_data["cell_size"] = (cells[0][0].shape[1], cells[0][0].shape[0])
+        
+        calibration_file = self.templates_dir / "calibration.json"
+        with open(calibration_file, 'w') as f:
+            json.dump(self.calibration_data, f, indent=2)
+        
+        # Reload templates
+        self.cell_templates = self._load_cell_templates()
+        
+        print(f"Calibration successful! Saved {len(self.cell_templates)} templates.")
+        return True
 
 
 class InteractivePuzzleSelector:
@@ -222,7 +413,7 @@ class InteractivePuzzleSelector:
             (x, y, width, height) of selected region
         """
         print("Please select the puzzle region by clicking and dragging...")
-        print("Press ESC to cancel")
+        print("Press ESC to cancel, Enter to confirm selection")
         
         # Take a screenshot
         screenshot = pyautogui.screenshot()
@@ -240,11 +431,15 @@ class InteractivePuzzleSelector:
             
             # Draw selection rectangle
             if self.selecting and self.start_point:
-                current_pos = pyautogui.position()
-                cv2.rectangle(display, self.start_point, current_pos, (0, 255, 0), 2)
+                # Get current mouse position
+                x, y = pyautogui.position()
+                cv2.rectangle(display, self.start_point, (x, y), (0, 255, 0), 2)
             elif self.selection:
                 x, y, w, h = self.selection
                 cv2.rectangle(display, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                # Show instructions
+                cv2.putText(display, "Press Enter to confirm, ESC to cancel", 
+                          (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
             
             cv2.imshow('Select Puzzle Region', display)
             

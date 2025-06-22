@@ -148,6 +148,40 @@ def generate(size, difficulty):
         print("\n✗ Generated puzzle might not be solvable")
 
 
+@arrow.command()
+@click.option("--size", default=7, help="Board size (default: 7)")
+@click.option("--image", type=click.Path(exists=True), required=True, help="Reference image path")
+@click.option("--values", required=True, help="Known values as comma-separated rows (e.g., '0,1,2;3,4,0')")
+def calibrate_vision(size, image, values):
+    """Calibrate arrow puzzle vision with a reference image."""
+    from .puzzles.arrow import ArrowVision
+    import cv2
+    
+    # Load reference image
+    ref_image = cv2.imread(image)
+    if ref_image is None:
+        print(f"Error: Cannot load image from {image}")
+        return
+    
+    # Parse known values
+    rows = values.split(';')
+    known_values = []
+    for row in rows:
+        known_values.append([int(v) for v in row.split(',')])
+    
+    if len(known_values) != size or any(len(row) != size for row in known_values):
+        print(f"Error: Values must be a {size}x{size} grid")
+        return
+    
+    # Calibrate
+    vision = ArrowVision(grid_size=size)
+    if vision.calibrate(ref_image, known_values):
+        print("✓ Calibration successful!")
+        print(f"Templates saved to: {vision.templates_dir}")
+    else:
+        print("✗ Calibration failed")
+
+
 # 15 puzzle commands
 @cli.group()
 def fifteen():
@@ -217,6 +251,40 @@ def generate(size, shuffles):
         print(f"Manhattan distance: {board.manhattan_distance()}")
     else:
         print("\n✗ Generated puzzle is not solvable")
+
+
+@fifteen.command()
+@click.option("--size", default=4, help="Board size (default: 4)")
+@click.option("--image", type=click.Path(exists=True), required=True, help="Reference image path")
+@click.option("--state", required=True, help="Known state as comma-separated rows (e.g., '1,2,3,4;5,6,7,8;9,10,11,12;13,14,15,0')")
+def calibrate_vision(size, image, state):
+    """Calibrate 15 puzzle vision with a reference image."""
+    from .puzzles.fifteen import FifteenVision
+    import cv2
+    
+    # Load reference image
+    ref_image = cv2.imread(image)
+    if ref_image is None:
+        print(f"Error: Cannot load image from {image}")
+        return
+    
+    # Parse known state
+    rows = state.split(';')
+    known_state = []
+    for row in rows:
+        known_state.append([int(v) for v in row.split(',')])
+    
+    if len(known_state) != size or any(len(row) != size for row in known_state):
+        print(f"Error: State must be a {size}x{size} grid")
+        return
+    
+    # Calibrate
+    vision = FifteenVision(size=size)
+    if vision.calibrate(ref_image, known_state):
+        print("✓ Calibration successful!")
+        print(f"Templates saved to: {vision.templates_dir}")
+    else:
+        print("✗ Calibration failed")
 
 
 # Auto-solve commands
