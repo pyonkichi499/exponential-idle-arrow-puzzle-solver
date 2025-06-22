@@ -1,0 +1,117 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Test Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rye
+      uses: eifinger/setup-rye@v3
+      with:
+        version: 'latest'
+    
+    - name: Configure Rye
+      run: |
+        rye config --set-bool behavior.use-uv=true
+        rye pin ${{ matrix.python-version }}
+    
+    - name: Install dependencies
+      run: |
+        rye sync --all-features
+    
+    - name: Run tests with coverage
+      run: |
+        rye run pytest tests/ --cov=src/puzzle_solver --cov-report=xml --cov-report=term
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  lint:
+    name: Lint and Format Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rye
+      uses: eifinger/setup-rye@v3
+    
+    - name: Install dependencies
+      run: |
+        rye sync --all-features
+    
+    - name: Run Black
+      run: |
+        rye run black --check src/ tests/
+    
+    - name: Run Ruff
+      run: |
+        rye run ruff check src/ tests/
+    
+    - name: Type checking with mypy
+      run: |
+        rye run mypy src/ --ignore-missing-imports || true
+
+  benchmark:
+    name: Run Benchmarks
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rye
+      uses: eifinger/setup-rye@v3
+    
+    - name: Install dependencies
+      run: |
+        rye sync --all-features
+    
+    - name: Run performance benchmarks
+      run: |
+        rye run python benchmarks/performance_test.py
+    
+    - name: Store benchmark result
+      uses: benchmark-action/github-action-benchmark@v1
+      if: github.event_name == 'push'
+      with:
+        tool: 'customSmallerIsBetter'
+        output-file-path: benchmark_results.json
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        auto-push: true
+
+  build:
+    name: Build Distribution
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rye
+      uses: eifinger/setup-rye@v3
+    
+    - name: Build package
+      run: |
+        rye build
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: dist
+        path: dist/
