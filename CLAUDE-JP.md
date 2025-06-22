@@ -4,15 +4,24 @@
 
 ## プロジェクト概要
 
-これは「exponential-idle-arrow-puzzle-solver」プロジェクトです - モバイルゲーム「Exponential Idle」に登場する矢印パズルを解くためのライブラリです。
+これは「puzzle-solver」プロジェクトです - 様々なタイプのパズルを解くための拡張可能なフレームワークです。現在サポートしているパズル：
+- モバイルゲーム「Exponential Idle」の矢印パズル
+- 15パズル（スライディングパズル）
 
 ## 現在の状態
 
 プロジェクトは以下のコンポーネントで実装されています：
-- 矢印パズルのボード表現
-- Propagationアルゴリズムを実装したソルバー
-- Hard/Expertモードの解法サポート
-- パズルを解くためのCLIインターフェース
+- 抽象基底クラスを使用した拡張可能なアーキテクチャ
+- 矢印パズルソルバー：
+  - 矢印パズルのボード表現
+  - Propagationアルゴリズムを実装したソルバー
+  - Hard/Expertモードの解法サポート
+  - 自動解法のための実験的な画像認識
+- 15パズルソルバー：
+  - 解法可能性チェック付きボード表現
+  - A*アルゴリズムの実装
+  - マンハッタン距離ヒューリスティック
+- 全パズルタイプ用の統一CLIインターフェース
 - pytestを使用したテストスイート
 
 ## 開発に関する注意事項
@@ -20,32 +29,58 @@
 1. **言語**: Python（Ryeで管理）
 
 2. **プロジェクト構造**:
-   - `src/arrow_puzzle_solver/`: メインパッケージ
-     - `board.py`: ボード表現
-     - `solver.py`: 解法アルゴリズム
-     - `cli.py`: コマンドラインインターフェース
+   - `src/puzzle_solver/`: メインパッケージ
+     - `core/`: 基底クラスとインターフェース
+       - `base_board.py`: 抽象ボードインターフェース
+       - `base_solver.py`: 抽象ソルバーインターフェース
+       - `base_vision.py`: 抽象ビジョンインターフェース
+     - `puzzles/`: パズル実装
+       - `arrow/`: 矢印パズル実装
+       - `fifteen/`: 15パズル実装
+     - `cli.py`: 統一コマンドラインインターフェース
+     - `automation.py`: 画面自動化ユーティリティ
    - `tests/`: テストスイート
 
 3. **主要コマンド**:
    - 依存関係のインストール: `rye sync`
    - テストの実行: `rye run pytest tests/ -v`
-   - CLIの実行: `rye run python -m arrow_puzzle_solver [command]`
-   - デモ: `rye run python -m arrow_puzzle_solver demo`
+   - 矢印パズルコマンド：
+     - デモ: `rye run python -m puzzle_solver arrow demo`
+     - 解法: `rye run python -m puzzle_solver arrow solve`
+     - 自動解法: `rye run python -m puzzle_solver arrow auto-solve`
+   - 15パズルコマンド：
+     - デモ: `rye run python -m puzzle_solver fifteen demo`
+     - 解法: `rye run python -m puzzle_solver fifteen solve`
 
 4. **アルゴリズム実装**:
-   - 行を順次解くPropagation手法
-   - 高度なエンコーディング戦略を使用したHard/Expertモード
-   - 解の正確性の検証
+   - 矢印パズル：
+     - 行を順次解くPropagation手法
+     - 高度なエンコーディング戦略を使用したHard/Expertモード
+     - 解の正確性の検証
+   - 15パズル：
+     - A*探索アルゴリズム
+     - マンハッタン距離ヒューリスティック
+     - 反転数に基づく解法可能性チェック
 
-## 矢印パズルについて
+## パズルタイプ
 
+### 矢印パズル
 Exponential Idleの矢印パズルは以下の特徴を持つ論理パズルです：
 - ボードは0-4の値を持つセルで構成
 - セルをタップすると、そのセルと上下左右の隣接セルの値が増加（5で割った余り）
 - 目標は全てのセルを1にすること
 - PropagationアルゴリズムとHard/Expertモード戦略を使用
 
+### 15パズル
+クラシックなスライディングパズル：
+- 1-15の数字と1つの空きスペースを持つ4x4グリッド
+- 数字は空きスペースにスライドして移動可能
+- 目標は数字を昇順に並べること
+- 最適解のためにA*アルゴリズムを使用
+
 ## 重要な注意事項
 
 - このファイル（CLAUDE-JP.md）とCLAUDE.mdの両方を常に同期して更新してください
 - 新しい機能や変更を加える際は、両方のファイルに同じ情報を反映させてください
+- 矢印パズルの画像認識機能は実験的なもので、実際のゲームでテストされていません
+- 新しいパズルタイプを追加する際は、基底クラス継承による確立されたパターンに従ってください

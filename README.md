@@ -1,14 +1,28 @@
-# Exponential Idle Arrow Puzzle Solver
+# Puzzle Solver
 
-A Python library and CLI tool for solving arrow puzzles that appear in the mobile game [Exponential Idle](https://conicgames.github.io/exponentialidle/).
+様々なパズルを解くための統合フレームワークです。現在、以下のパズルに対応しています：
+- Exponential Idleの矢印パズル
+- 15パズル
 
 ## Overview
 
-Arrow puzzles in Exponential Idle are logic puzzles where:
-- The board consists of cells with values from 0 to 4
-- Tapping a cell increments it and its orthogonal neighbors (mod 5)
-- The goal is to make all cells equal to 1
-- Puzzles can be solved using the Propagation algorithm and Hard/Expert mode strategies
+このプロジェクトは、拡張可能なパズルソルバーフレームワークを提供します。各パズルタイプは独自の実装を持ちながら、共通のインターフェースを通じて統一的に扱うことができます。
+
+### 対応パズル
+
+#### 矢印パズル (Arrow Puzzle)
+Exponential Idleのゲーム内で出現する論理パズル：
+- ボードは0から4の値を持つセルで構成
+- セルをタップすると、そのセルと隣接する4方向のセルの値が+1される（mod 5）
+- 目標：すべてのセルを1にする
+- Propagationアルゴリズムとハード/エキスパートモード戦略を使用
+
+#### 15パズル (15 Puzzle)
+クラシックなスライディングパズル：
+- 4x4のグリッドに1-15の数字と1つの空きスペース
+- 空きスペースに隣接する数字をスライドして移動
+- 目標：数字を昇順に並べる
+- A*アルゴリズムを使用して最適解を探索
 
 ## Installation
 
@@ -34,164 +48,103 @@ rye sync
 
 ### Command Line Interface
 
-The solver provides a CLI with several commands:
-
-#### Solve a puzzle
+#### 矢印パズル
 
 ```bash
-# Interactive input
-rye run python -m arrow_puzzle_solver solve
+# デモを実行
+rye run python -m puzzle_solver arrow demo
 
-# From file
-rye run python -m arrow_puzzle_solver solve --input-file puzzle.txt
+# パズルを解く
+rye run python -m puzzle_solver arrow solve --size 6 --board "0,1,2,3,4,0,1,2,3,4,0,1,2,3,4,0,1,2,3,4,0,1,2,3,4,0,1,2,3,4,0,1,2,3,4,0"
 
-# With specific mode
-rye run python -m arrow_puzzle_solver solve --mode expert
+# ランダムなパズルを生成
+rye run python -m puzzle_solver arrow generate --size 6
+
+# 画像認識で自動解法（実験的機能）
+rye run python -m puzzle_solver arrow auto-solve
 ```
 
-#### Generate a random puzzle
+#### 15パズル
 
 ```bash
-# Generate a 7x7 puzzle with medium difficulty
-rye run python -m arrow_puzzle_solver generate --size 7 --difficulty medium
-```
+# デモを実行
+rye run python -m puzzle_solver fifteen demo
 
-#### Run the demo
+# パズルを解く
+rye run python -m puzzle_solver fifteen solve --board "1,2,3,4,5,6,7,8,9,10,11,12,13,14,0,15"
 
-```bash
-rye run python -m arrow_puzzle_solver demo
-```
-
-#### Automatically solve puzzles on screen
-
-```bash
-# Interactive region selection
-rye run python -m arrow_puzzle_solver auto-solve
-
-# With specific region
-rye run python -m arrow_puzzle_solver auto-solve --region 100 200 500 500
-
-# Continuous mode
-rye run python -m arrow_puzzle_solver auto-solve --region 100 200 500 500 --continuous
-
-# Calibrate click timing
-rye run python -m arrow_puzzle_solver calibrate
+# ランダムなパズルを生成
+rye run python -m puzzle_solver fifteen generate
 ```
 
 ### Python API
 
-You can also use the solver programmatically:
-
 ```python
-from arrow_puzzle_solver import Board, Solver
+# 矢印パズル
+from puzzle_solver.puzzles.arrow import ArrowBoard, ArrowSolver
 
-# Create a board
-board = Board(size=7)
-
-# Set initial values (0-4)
-board.set_value(0, 0, 2)
-board.set_value(0, 1, 3)
-# ... set other values
-
-# Create solver and solve
-solver = Solver(board)
-if solver.solve(mode='expert'):
+board = ArrowBoard(size=7)
+board.tap(0, 0)  # タップ操作
+solver = ArrowSolver(board)
+if solver.solve():
     print("Solved!")
-    print(solver.board)
-    print(f"Total moves: {len(solver.moves)}")
-else:
-    print("Could not solve the puzzle")
+    print(solver.get_solution())
+
+# 15パズル
+from puzzle_solver.puzzles.fifteen import FifteenBoard, FifteenSolver
+
+board = FifteenBoard()
+board.shuffle(100)  # 100回のランダム移動でシャッフル
+solver = FifteenSolver(board)
+if solver.solve():
+    print("Solved!")
+    for move in solver.get_solution():
+        print(f"Move: {move}")
 ```
 
-## Algorithm
+## Architecture
 
-### Propagation Method
+このプロジェクトは拡張可能なアーキテクチャを採用しています：
 
-The basic solving strategy that processes each row:
-1. Solve the center tile
-2. Solve tiles to the left of center (1, 2, 3 spaces)
-3. Solve tiles to the right of center (1, 2, 3 spaces)
-4. Repeat for all rows except the bottom row
+```
+puzzle_solver/
+├── core/               # 共通インターフェースとベースクラス
+│   ├── base_board.py   # パズルボードの抽象基底クラス
+│   ├── base_solver.py  # ソルバーの抽象基底クラス
+│   └── base_vision.py  # 画像認識の抽象基底クラス
+├── puzzles/            # 各パズルの実装
+│   ├── arrow/          # 矢印パズル
+│   └── fifteen/        # 15パズル
+├── automation.py       # 自動化ユーティリティ
+└── cli.py             # CLIインターフェース
+```
 
-### Hard/Expert Mode
+### 新しいパズルの追加
 
-An advanced strategy for difficult puzzles:
-1. Apply propagation first
-2. Encode bottom row information onto the top row
-3. Apply specific tap sequences based on bottom row values
-4. Propagate again from the top
+新しいパズルタイプを追加するには：
+
+1. `puzzles/`ディレクトリに新しいパズルのディレクトリを作成
+2. `BaseBoard`、`BaseSolver`、`BaseVision`（必要に応じて）を継承して実装
+3. `cli.py`に新しいコマンドグループを追加
 
 ## Automatic Screen Solving
 
-The solver can automatically detect and solve puzzles displayed on your screen:
+矢印パズルは画面上のパズルを自動的に検出して解くことができます：
 
-### Features
-- **Screen capture and puzzle detection**: Automatically finds puzzle grids on screen
-- **Interactive region selection**: Click and drag to select puzzle area
-- **Automatic mouse clicking**: Executes solution with configurable delays
-- **Continuous mode**: Solve multiple puzzles automatically
-
-### Usage
 ```bash
-# Interactive mode - select region with mouse
-rye run python -m arrow_puzzle_solver auto-solve
+# インタラクティブモード - マウスで領域を選択
+rye run python -m puzzle_solver arrow auto-solve
 
-# Specify exact region (x, y, width, height)
-rye run python -m arrow_puzzle_solver auto-solve --region 100 200 500 500
+# 領域を指定 (x, y, width, height)
+rye run python -m puzzle_solver arrow auto-solve --region 100 200 500 500
 
-# Continuous solving
-rye run python -m arrow_puzzle_solver auto-solve --region 100 200 500 500 --continuous --max-puzzles 10
-
-# Adjust click timing
-rye run python -m arrow_puzzle_solver auto-solve --click-delay 0.2
+# 連続解法
+rye run python -m puzzle_solver arrow auto-solve --continuous --max-puzzles 10
 ```
 
-### Calibration
-For optimal performance, calibrate the click timing for your system:
-```bash
-rye run python -m arrow_puzzle_solver calibrate
-```
-
-### Important Notes on Screen Recognition
-
-**⚠️ The current image recognition implementation is a proof of concept and has not been tested with actual Exponential Idle gameplay.**
-
-- The digit recognition uses a simple pixel ratio heuristic that will likely need adjustment for actual game graphics
-- For production use, you should:
-  - Capture actual game screenshots of digits 0-4
-  - Implement proper template matching or OCR
-  - Test and calibrate the grid detection for your specific game resolution
-- The current implementation serves as a framework that can be adapted once actual game assets are available
-
-## Input Format
-
-Puzzles are represented as space or comma-separated values:
-
-```
-2 3 1 4 0 2 3
-1 4 2 3 1 0 4
-3 0 4 1 2 3 1
-4 2 1 0 3 4 2
-0 3 2 4 1 2 0
-2 1 3 2 4 0 3
-3 4 0 1 2 3 4
-```
+**⚠️ 重要：現在の画像認識実装は概念実証であり、実際のExponential Idleゲームプレイではテストされていません。** 詳細は[KNOWN_ISSUES.md](KNOWN_ISSUES.md)を参照してください。
 
 ## Development
-
-### Project Structure
-
-```
-arrow-puzzle-solver/
-├── src/arrow_puzzle_solver/
-│   ├── __init__.py
-│   ├── board.py        # Board representation
-│   ├── solver.py       # Solving algorithms
-│   └── cli.py          # CLI interface
-├── tests/              # Test suite
-├── pyproject.toml      # Project configuration
-└── README.md
-```
 
 ### Running Tests
 
@@ -209,46 +162,10 @@ rye run black src/ tests/
 rye run ruff src/ tests/
 ```
 
-## Limitations
-
-- Not all randomly generated puzzles may be solvable with the current algorithm
-- The algorithm is designed for puzzles that appear in Exponential Idle, which are guaranteed to be solvable
-- Currently supports square boards (default 7x7)
-- **Image recognition for auto-solve is not production-ready** - see [KNOWN_ISSUES.md](KNOWN_ISSUES.md) for details
-
-## Examples
-
-### Basic Usage Example
-
-```python
-from arrow_puzzle_solver import Board, Solver
-
-# Create a simple 3x3 board
-board = Board(size=3)
-
-# Set up a solvable pattern
-board.tap(1, 1)  # Tap center
-
-# Solve it
-solver = Solver(board)
-solver.solve()
-```
-
-### CLI Example
-
-```bash
-# Solve a puzzle from file
-echo "2 3 1
-      1 4 2
-      3 0 4" > puzzle.txt
-      
-rye run python -m arrow_puzzle_solver solve --input-file puzzle.txt --size 3
-```
-
 ## References
 
 - [Exponential Idle Guide - Arrow Puzzles](https://exponential-idle-guides.netlify.app/guides/asd/)
-- Algorithm implementation based on the solving methods described in the guide
+- 矢印パズルのアルゴリズム実装は上記ガイドに記載された解法に基づいています
 
 ## License
 

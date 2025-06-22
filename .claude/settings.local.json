@@ -4,7 +4,14 @@
       "Bash(find:*)",
       "Bash(rye:*)",
       "Bash(mkdir:*)",
-      "Bash(touch:*)"
+      "Bash(touch:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git branch:*)",
+      "Bash(rm:*)",
+      "Bash(git reset:*)"
     ],
     "deny": []
   }
