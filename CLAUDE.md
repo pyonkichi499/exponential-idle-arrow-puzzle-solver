@@ -84,5 +84,7 @@ Classic sliding puzzle where:
 - When making updates or adding new features, ensure both files contain the same information
 - CLAUDE-JP.md is the Japanese version of this file for Japanese-speaking developers
 - **Development Diary**: When working, create subjective development diaries following the instructions in `/devlog/README.md`
+- **MANDATORY**: Update diary before any git commit with final token usage via `ccusage --since $(date +%Y%m%d)`
+- **END-OF-DAY**: Always finalize diary with complete cost analysis before session ends
 - The image recognition feature for arrow puzzles is experimental and not tested with actual game
 - When adding new puzzle types, follow the established pattern with base class inheritance
