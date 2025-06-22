@@ -11,18 +11,18 @@
 
 -e file:.
 click==8.2.1
-    # via arrow-puzzle-solver
+    # via puzzle-solver
 mouseinfo==0.1.3
     # via pyautogui
 numpy==2.3.1
-    # via arrow-puzzle-solver
     # via opencv-python
+    # via puzzle-solver
 opencv-python==4.11.0.86
-    # via arrow-puzzle-solver
+    # via puzzle-solver
 pillow==11.2.1
-    # via arrow-puzzle-solver
+    # via puzzle-solver
 pyautogui==0.9.54
-    # via arrow-puzzle-solver
+    # via puzzle-solver
 pygetwindow==0.0.9
     # via pyautogui
 pymsgbox==1.0.9
