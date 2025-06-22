@@ -17,6 +17,31 @@ class ArrowBoard(BaseBoard):
         """
         self.size = size
         self.grid = np.zeros((size, size), dtype=int)
+    
+    @classmethod
+    def from_string(cls, string: str, size: int = 7) -> 'ArrowBoard':
+        """Create board from string representation."""
+        board = cls(size)
+        if not string.strip():
+            return board
+        
+        lines = string.strip().split('\n')
+        for i, line in enumerate(lines[:size]):
+            if not line.strip():
+                continue
+            values = line.replace(',', ' ').split()
+            for j, val in enumerate(values[:size]):
+                if val.strip():
+                    board.set_value(i, j, int(val))
+        return board
+    
+    def to_string(self) -> str:
+        """Convert board to string representation."""
+        lines = []
+        for i in range(self.size):
+            row = ' '.join(str(self.grid[i, j]) for j in range(self.size))
+            lines.append(row)
+        return '\n'.join(lines)
 
     def copy(self) -> "ArrowBoard":
         """Create a deep copy of the board."""
