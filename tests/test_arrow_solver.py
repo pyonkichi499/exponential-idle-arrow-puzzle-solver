@@ -8,8 +8,8 @@ from puzzle_solver.puzzles.arrow.solver import ArrowSolver
 class TestArrowSolver:
     """Test cases for ArrowSolver class."""
 
-    def test_solve_cell(self):
-        """Test solving a single cell."""
+    def test_単一セル解決(self):
+        """単一セルの解決をテスト"""
         board = ArrowBoard(5)
         # Set a cell to value 3
         board.set_value(0, 2, 3)
@@ -20,8 +20,8 @@ class TestArrowSolver:
         # Cell should now be 1 (3 + 3 = 6 % 5 = 1)
         assert solver.board.get_value(0, 2) == 1
 
-    def test_propagate_row(self):
-        """Test propagating a single row."""
+    def test_行の伝搬(self):
+        """単一行の伝搬処理をテスト"""
         board = ArrowBoard(5)
         # Set some values in the first row
         board.set_value(0, 0, 2)
@@ -36,8 +36,8 @@ class TestArrowSolver:
         # First row should all be 1
         assert all(solver.board.get_value(0, i) == 1 for i in range(5))
 
-    def test_simple_solve(self):
-        """Test solving a simple board."""
+    def test_簡単なパズル解決(self):
+        """簡単なパズルの解決をテスト"""
         board = ArrowBoard(3)
         # Create a solvable pattern - all 1s is the goal
         board.grid = np.ones((3, 3), dtype=int)
@@ -51,8 +51,8 @@ class TestArrowSolver:
         # so we just check that it runs without errors and returns a boolean
         assert isinstance(result, bool)
 
-    def test_solve_modes(self):
-        """Test different solving modes."""
+    def test_解決モード(self):
+        """異なる解決モードをテスト"""
         board = ArrowBoard(5)
         # Create a test pattern
         for i in range(5):
@@ -71,8 +71,8 @@ class TestArrowSolver:
         assert len(solver1.moves) > 0
         assert len(solver2.moves) > 0
 
-    def test_verify_solution(self):
-        """Test solution verification."""
+    def test_解法検証(self):
+        """解法の検証をテスト"""
         board = ArrowBoard(3)
         board.grid = np.ones((3, 3), dtype=int)
 
@@ -82,8 +82,8 @@ class TestArrowSolver:
         # Should verify as correct
         assert solver.verify_solution()
 
-    def test_get_moves(self):
-        """Test getting move history."""
+    def test_move履歴取得(self):
+        """move履歴の取得をテスト"""
         board = ArrowBoard(3)
         board.set_value(0, 0, 2)
 
@@ -95,8 +95,8 @@ class TestArrowSolver:
         assert isinstance(moves[0], tuple)
         assert len(moves[0]) == 2
 
-    def test_get_solution(self):
-        """Test getting solution moves."""
+    def test_解法move取得(self):
+        """解法のmove取得をテスト"""
         board = ArrowBoard(3)
         board.set_value(0, 0, 2)
 

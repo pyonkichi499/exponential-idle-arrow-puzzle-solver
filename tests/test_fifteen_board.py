@@ -7,8 +7,8 @@ from puzzle_solver.puzzles.fifteen.board import FifteenBoard
 class TestFifteenBoard:
     """Test cases for FifteenBoard class."""
 
-    def test_board_initialization(self):
-        """Test board initialization."""
+    def test_ボード初期化(self):
+        """ボードの初期化をテスト"""
         board = FifteenBoard()
         assert board.size == 4
         assert board.grid.shape == (4, 4)
@@ -23,8 +23,8 @@ class TestFifteenBoard:
         assert np.array_equal(board.grid, expected)
         assert board.empty_pos == (3, 3)
 
-    def test_move_empty(self):
-        """Test moving the empty space."""
+    def test_空きマスの移動(self):
+        """空きマスの移動をテスト"""
         board = FifteenBoard()
         
         # Move up
@@ -39,8 +39,8 @@ class TestFifteenBoard:
         assert board.grid[2, 3] == 11
         assert board.grid[2, 2] == 0
 
-    def test_invalid_moves(self):
-        """Test invalid moves are blocked."""
+    def test_無効なmove(self):
+        """無効なmoveがブロックされることをテスト"""
         board = FifteenBoard()
         
         # Can't move right or down from bottom-right corner
@@ -51,8 +51,8 @@ class TestFifteenBoard:
         board.apply_move("down")
         assert board.empty_pos == old_pos
 
-    def test_is_solved(self):
-        """Test is_solved method."""
+    def test_完成判定(self):
+        """is_solvedメソッドをテスト"""
         board = FifteenBoard()
         assert board.is_solved()
         
@@ -64,8 +64,8 @@ class TestFifteenBoard:
         board.apply_move("down")
         assert board.is_solved()
 
-    def test_get_legal_moves(self):
-        """Test get_legal_moves method."""
+    def test_有効なmove取得(self):
+        """get_legal_movesメソッドをテスト"""
         board = FifteenBoard()
         
         # From bottom-right corner
@@ -80,8 +80,8 @@ class TestFifteenBoard:
         moves = board.get_legal_moves()
         assert set(moves) == {"up", "down", "left", "right"}
 
-    def test_apply_move(self):
-        """Test apply_move method."""
+    def test_move適用(self):
+        """apply_moveメソッドをテスト"""
         board = FifteenBoard()
         board.apply_move("up")
         
@@ -89,8 +89,8 @@ class TestFifteenBoard:
         assert board.grid[3, 3] == 12
         assert board.grid[2, 3] == 0
 
-    def test_shuffle(self):
-        """Test shuffle method."""
+    def test_シャッフル(self):
+        """shuffleメソッドをテスト"""
         board = FifteenBoard()
         initial_state = board.grid.copy()
         board.shuffle(50)  # More shuffles to ensure movement
@@ -98,8 +98,8 @@ class TestFifteenBoard:
         # Board state should have changed
         assert not np.array_equal(board.grid, initial_state) or board.empty_pos != (3, 3)
 
-    def test_is_solvable(self):
-        """Test is_solvable method."""
+    def test_解決可能性判定(self):
+        """is_solvableメソッドをテスト"""
         board = FifteenBoard()
         assert board.is_solvable()
         
@@ -108,8 +108,8 @@ class TestFifteenBoard:
         board.grid[0, 1] = 1
         assert not board.is_solvable()
 
-    def test_manhattan_distance(self):
-        """Test Manhattan distance calculation."""
+    def test_マンハッタン距離(self):
+        """マンハッタン距離の計算をテスト"""
         board = FifteenBoard()
         assert board.manhattan_distance() == 0
         
@@ -117,8 +117,8 @@ class TestFifteenBoard:
         board.apply_move("up")
         assert board.manhattan_distance() > 0
 
-    def test_copy(self):
-        """Test board copying."""
+    def test_ボードコピー(self):
+        """ボードのコピーをテスト"""
         board1 = FifteenBoard()
         board1.apply_move("up")
         

@@ -8,14 +8,14 @@ from puzzle_solver.puzzles.arrow.board import ArrowBoard
 class TestArrowBoardEdgeCases:
     """Edge case tests for ArrowBoard."""
     
-    def test_minimum_board_size(self):
-        """Test creating board with minimum size."""
+    def test_最小ボードサイズ(self):
+        """最小サイズのボード作成をテスト"""
         board = ArrowBoard(1)
         assert board.size == 1
         assert board.grid.shape == (1, 1)
     
-    def test_from_string_various_formats(self):
-        """Test from_string with various input formats."""
+    def test_文字列からの様々な形式(self):
+        """文字列からの様々な入力形式をテスト"""
         # Comma separated
         board1 = ArrowBoard.from_string("1,2,3\n4,0,1\n2,3,4", size=3)
         assert board1.get_value(0, 0) == 1
@@ -31,8 +31,8 @@ class TestArrowBoardEdgeCases:
         assert board3.get_value(0, 0) == 1
         assert board3.get_value(1, 1) == 0
     
-    def test_from_string_incomplete_data(self):
-        """Test from_string with incomplete data."""
+    def test_不完全データからの文字列(self):
+        """不完全なデータからの文字列変換をテスト"""
         # Less values than expected
         board = ArrowBoard.from_string("1,2\n3", size=3)
         assert board.get_value(0, 0) == 1
@@ -41,13 +41,13 @@ class TestArrowBoardEdgeCases:
         assert board.get_value(1, 0) == 3
         assert board.get_value(1, 1) == 0  # Default value
     
-    def test_from_string_empty(self):
-        """Test from_string with empty string."""
+    def test_空文字列からの変換(self):
+        """空文字列からの変換をテスト"""
         board = ArrowBoard.from_string("", size=3)
         assert np.all(board.grid == 0)
     
-    def test_to_string(self):
-        """Test to_string method."""
+    def test_文字列変換(self):
+        """to_stringメソッドをテスト"""
         board = ArrowBoard(3)
         board.set_value(0, 0, 1)
         board.set_value(1, 1, 2)
@@ -58,8 +58,8 @@ class TestArrowBoardEdgeCases:
         assert "2" in string_repr
         assert "3" in string_repr
     
-    def test_invalid_value_wrapping(self):
-        """Test that invalid values wrap correctly."""
+    def test_無効値の巡回(self):
+        """無効値が正しく巡回することをテスト"""
         board = ArrowBoard(3)
         
         # Set value > 4
@@ -72,8 +72,8 @@ class TestArrowBoardEdgeCases:
         board.tap(1, 1)  # Should wrap: -1 + 1 = 0
         assert board.get_value(1, 1) == 0
     
-    def test_boundary_taps(self):
-        """Test tapping all boundary cells."""
+    def test_境界セルタップ(self):
+        """すべての境界セルのタップをテスト"""
         board = ArrowBoard(5)
         
         # Tap all corners
@@ -87,8 +87,8 @@ class TestArrowBoardEdgeCases:
         assert board.get_value(1, 0) == 1  # Adjacent to (0,0)
         assert board.get_value(1, 1) == 0  # Not adjacent to corners
     
-    def test_symmetric_operations(self):
-        """Test symmetric operations on board."""
+    def test_対称操作(self):
+        """ボード上の対称操作をテスト"""
         board = ArrowBoard(5)
         
         # Create symmetric pattern

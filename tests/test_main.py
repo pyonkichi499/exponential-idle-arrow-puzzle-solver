@@ -4,8 +4,8 @@ import pytest
 from unittest.mock import patch, MagicMock
 
 
-def test_main_module():
-    """Test that __main__ module can be imported."""
+def test_mainモジュール():
+    """__main__モジュールがインポートできることをテスト"""
     # Just test that the module imports successfully
     # The actual execution happens when running as main
     import puzzle_solver.__main__

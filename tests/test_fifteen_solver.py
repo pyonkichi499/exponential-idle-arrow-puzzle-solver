@@ -8,16 +8,16 @@ from puzzle_solver.puzzles.fifteen.solver import FifteenSolver
 class TestFifteenSolver:
     """Test cases for FifteenSolver class."""
 
-    def test_solver_initialization(self):
-        """Test solver initialization."""
+    def test_ソルバー初期化(self):
+        """ソルバーの初期化をテスト"""
         board = FifteenBoard()
         solver = FifteenSolver(board)
         # Solver creates a copy of the board
         assert np.array_equal(solver.board.grid, board.grid)
         assert solver.solution == []
 
-    def test_solve_already_solved(self):
-        """Test solving an already solved board."""
+    def test_完成済パズルの解決(self):
+        """既に完成しているパズルの解決をテスト"""
         board = FifteenBoard()
         solver = FifteenSolver(board)
         
@@ -25,8 +25,8 @@ class TestFifteenSolver:
         assert result is True
         assert len(solver.solution) == 0
 
-    def test_solve_simple_puzzle(self):
-        """Test solving a simple puzzle."""
+    def test_簡単パズル解決(self):
+        """簡単なパズルの解決をテスト"""
         board = FifteenBoard()
         # Make a few moves to scramble
         board.apply_move("up")
@@ -43,8 +43,8 @@ class TestFifteenSolver:
             board.apply_move(move)
         assert board.is_solved()
 
-    def test_solve_unsolvable(self):
-        """Test solving an unsolvable puzzle."""
+    def test_解けないパズル解決(self):
+        """解けないパズルの解決をテスト"""
         board = FifteenBoard()
         # Create unsolvable configuration
         board.grid[0, 0] = 2
@@ -56,8 +56,8 @@ class TestFifteenSolver:
         assert result is False
         assert len(solver.solution) == 0
 
-    def test_get_solution(self):
-        """Test getting solution moves."""
+    def test_解法move取得(self):
+        """解法moveの取得をテスト"""
         board = FifteenBoard()
         board.shuffle(5)
         
@@ -68,8 +68,8 @@ class TestFifteenSolver:
         assert isinstance(solution, list)
         assert all(move in ["up", "down", "left", "right"] for move in solution)
 
-    def test_solve_with_timeout(self):
-        """Test that solver respects complexity limits."""
+    def test_複雑さ制限付き解決(self):
+        """ソルバーが複雑さ制限を尊重することをテスト"""
         board = FifteenBoard()
         # Create a moderately complex puzzle
         board.shuffle(20)

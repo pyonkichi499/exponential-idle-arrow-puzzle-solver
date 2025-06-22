@@ -43,34 +43,34 @@ class MockVision(BaseVision):
 class TestPuzzleRegistry:
     """Test cases for puzzle registry system."""
     
-    def test_registry_has_puzzles(self):
-        """Test that registry has pre-registered puzzles."""
+    def test_レジストリにパズルが登録済み(self):
+        """レジストリに事前登録されたパズルがあることをテスト"""
         assert "arrow" in _PUZZLE_REGISTRY
         assert "fifteen" in _PUZZLE_REGISTRY
         assert _PUZZLE_REGISTRY["arrow"][0] is not None  # board class
         assert _PUZZLE_REGISTRY["arrow"][1] is not None  # solver class
     
-    def test_get_puzzle_board(self):
-        """Test getting a puzzle board class."""
+    def test_パズルボード取得(self):
+        """パズルボードクラスの取得をテスト"""
         # Arrow puzzle should be pre-registered
         board_class = get_puzzle_board("arrow")
         assert board_class is not None
         assert issubclass(board_class, BaseBoard)
     
-    def test_get_puzzle_solver(self):
-        """Test getting a puzzle solver class."""
+    def test_パズルソルバー取得(self):
+        """パズルソルバークラスの取得をテスト"""
         solver_class = get_puzzle_solver("arrow")
         assert solver_class is not None
         assert issubclass(solver_class, BaseSolver)
     
-    def test_get_puzzle_vision(self):
-        """Test getting a puzzle vision class."""
+    def test_パズルビジョン取得(self):
+        """パズルビジョンクラスの取得をテスト"""
         vision = get_puzzle_vision("arrow")
         # Vision might be None if opencv is not installed
         assert vision is None or isinstance(vision, BaseVision)
     
-    def test_unknown_puzzle_type(self):
-        """Test getting unknown puzzle type raises ValueError."""
+    def test_未知パズルタイプ(self):
+        """未知のパズルタイプでValueErrorが発生することをテスト"""
         with pytest.raises(ValueError):
             get_puzzle_board("unknown_puzzle")
         
@@ -80,8 +80,8 @@ class TestPuzzleRegistry:
         with pytest.raises(ValueError):
             get_puzzle_vision("unknown_puzzle")
     
-    def test_available_puzzles(self):
-        """Test getting list of available puzzles."""
+    def test_利用可能パズル一覧(self):
+        """利用可能なパズルの一覧取得をテスト"""
         puzzles = list(_PUZZLE_REGISTRY.keys())
         assert isinstance(puzzles, list)
         assert "arrow" in puzzles

@@ -7,15 +7,15 @@ from puzzle_solver.puzzles.arrow.board import ArrowBoard
 class TestArrowBoard:
     """Test cases for ArrowBoard class."""
 
-    def test_board_initialization(self):
-        """Test board initialization."""
+    def test_ボード初期化(self):
+        """ボードの初期化をテスト"""
         board = ArrowBoard(7)
         assert board.size == 7
         assert board.grid.shape == (7, 7)
         assert np.all(board.grid == 0)
 
-    def test_tap_center(self):
-        """Test tapping a center cell."""
+    def test_中央セルタップ(self):
+        """中央セルをタップするテスト"""
         board = ArrowBoard(5)
         board.tap(2, 2)
 
@@ -34,8 +34,8 @@ class TestArrowBoard:
         assert board.get_value(3, 1) == 0
         assert board.get_value(3, 3) == 0
 
-    def test_tap_corner(self):
-        """Test tapping a corner cell."""
+    def test_角セルタップ(self):
+        """角セルをタップするテスト"""
         board = ArrowBoard(5)
         board.tap(0, 0)
 
@@ -51,8 +51,8 @@ class TestArrowBoard:
         assert board.get_value(2, 0) == 0
         assert board.get_value(0, 2) == 0
 
-    def test_value_wrapping(self):
-        """Test that values wrap around at 5."""
+    def test_値の巡回(self):
+        """値が5で巡回することをテスト"""
         board = ArrowBoard(3)
 
         # Tap same cell 5 times
@@ -62,8 +62,8 @@ class TestArrowBoard:
         # Should wrap back to 0
         assert board.get_value(1, 1) == 0
 
-    def test_is_solved(self):
-        """Test is_solved method."""
+    def test_完成判定(self):
+        """パズルが完成したかの判定をテスト"""
         board = ArrowBoard(3)
 
         # Initially not solved
@@ -77,8 +77,8 @@ class TestArrowBoard:
         board.set_value(1, 1, 2)
         assert not board.is_solved()
 
-    def test_is_symmetric(self):
-        """Test is_symmetric method."""
+    def test_対称性判定(self):
+        """対称性の判定をテスト"""
         board = ArrowBoard(3)
 
         # Create symmetric pattern
@@ -92,8 +92,8 @@ class TestArrowBoard:
         board.set_value(0, 0, 3)
         assert not board.is_symmetric()
 
-    def test_copy(self):
-        """Test board copying."""
+    def test_ボードコピー(self):
+        """ボードのコピー機能をテスト"""
         board1 = ArrowBoard(3)
         board1.set_value(1, 1, 3)
 
@@ -107,8 +107,8 @@ class TestArrowBoard:
         assert board1.get_value(0, 0) == 0
         assert board2.get_value(0, 0) == 2
 
-    def test_legal_moves(self):
-        """Test get_legal_moves method."""
+    def test_有効なmove取得(self):
+        """有効なmoveの取得をテスト"""
         board = ArrowBoard(3)
         moves = board.get_legal_moves()
         
@@ -118,8 +118,8 @@ class TestArrowBoard:
         assert (1, 1) in moves
         assert (2, 2) in moves
 
-    def test_apply_move(self):
-        """Test apply_move method."""
+    def test_move適用(self):
+        """moveの適用をテスト"""
         board = ArrowBoard(3)
         board.apply_move((1, 1))
         

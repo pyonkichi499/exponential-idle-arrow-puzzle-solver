@@ -9,8 +9,8 @@ from puzzle_solver.puzzles.arrow.solver import ArrowSolver
 class TestArrowSolverAdvanced:
     """Advanced test cases for ArrowSolver."""
     
-    def test_encode_bottom_row(self):
-        """Test bottom row encoding for expert mode."""
+    def test_最下行エンコード(self):
+        """エキスパートモード用の最下行エンコードをテスト"""
         board = ArrowBoard(7)
         # Set specific bottom row values
         for i in range(7):
@@ -24,8 +24,8 @@ class TestArrowSolverAdvanced:
         # The solver should have made some moves
         assert len(solver.moves) > 0
     
-    def test_expert_solve_specific_pattern(self):
-        """Test expert mode with specific pattern."""
+    def test_特定パターンでのエキスパート解決(self):
+        """特定パターンでのエキスパートモードをテスト"""
         board = ArrowBoard(5)
         # Create a pattern that requires expert mode
         pattern = [
@@ -48,8 +48,8 @@ class TestArrowSolverAdvanced:
         if result:
             assert solver.verify_solution()
     
-    def test_propagate_behavior(self):
-        """Test propagation behavior."""
+    def test_伝搬動作(self):
+        """伝搬動作をテスト"""
         board = ArrowBoard(5)
         # Set specific values
         for i in range(5):
@@ -62,8 +62,8 @@ class TestArrowSolverAdvanced:
         final_sum = sum(solver.board.get_value(i, j) for i in range(5) for j in range(5))
         assert final_sum != 10  # Not all 2s anymore
     
-    def test_hard_mode_solving(self):
-        """Test hard mode solving."""
+    def test_ハードモード解決(self):
+        """ハードモードでの解決をテスト"""
         board = ArrowBoard(5)
         # Create a simple solvable pattern
         board.tap(0, 0)
@@ -76,8 +76,8 @@ class TestArrowSolverAdvanced:
         assert isinstance(result, bool)
         assert len(solver.moves) >= 0
     
-    def test_solve_with_all_zeros(self):
-        """Test solving board that's all zeros."""
+    def test_全てゼロのボード解決(self):
+        """全てがゼロのボードの解決をテスト"""
         board = ArrowBoard(3)
         # Board is already all zeros
         
@@ -87,8 +87,8 @@ class TestArrowSolverAdvanced:
         # Should need to make moves to get to all 1s
         assert len(solver.moves) > 0
     
-    def test_solve_with_all_ones(self):
-        """Test solving board that's already solved."""
+    def test_全て一のボード解決(self):
+        """既に解決済みのボードの解決をテスト"""
         board = ArrowBoard(3)
         board.grid = np.ones((3, 3), dtype=int)
         
@@ -99,8 +99,8 @@ class TestArrowSolverAdvanced:
         assert solver.verify_solution()
         assert len(solver.moves) == 0  # No moves needed
     
-    def test_large_board_performance(self):
-        """Test solver performance on larger board."""
+    def test_大型ボードパフォーマンス(self):
+        """大型ボードでのソルバーパフォーマンスをテスト"""
         board = ArrowBoard(10)
         # Random initial state
         np.random.seed(42)
@@ -112,8 +112,8 @@ class TestArrowSolverAdvanced:
         # Should complete without hanging
         assert isinstance(result, bool)
     
-    def test_copy_preservation(self):
-        """Test that original board is preserved."""
+    def test_元ボード保存(self):
+        """元のボードが保存されることをテスト"""
         board = ArrowBoard(5)
         original_grid = board.grid.copy()
         
