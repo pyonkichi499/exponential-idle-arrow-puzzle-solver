@@ -1,0 +1,10 @@
+{
+  "tile_size": [
+    89,
+    89
+  ],
+  "background_color": null,
+  "text_color": null,
+  "empty_tile_threshold": 5.0,
+  "ocr_config": "--oem 3 --psm 8 -c tessedit_char_whitelist=0123456789"
+}
