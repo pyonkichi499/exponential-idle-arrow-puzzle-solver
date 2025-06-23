@@ -66,8 +66,8 @@ class TestPuzzleRegistry:
     def test_パズルビジョン取得(self):
         """パズルビジョンクラスの取得をテスト"""
         vision = get_puzzle_vision("arrow")
-        # Vision might be None if opencv is not installed
-        assert vision is None or isinstance(vision, BaseVision)
+        # get_puzzle_vision returns a class, not an instance
+        assert vision is None or issubclass(vision, BaseVision)
     
     def test_未知パズルタイプ(self):
         """未知のパズルタイプでValueErrorが発生することをテスト"""
