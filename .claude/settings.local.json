@@ -11,7 +11,11 @@
       "Bash(git push:*)",
       "Bash(git branch:*)",
       "Bash(rm:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(ccusage --help)",
+      "Bash(ccusage session:*)",
+      "Bash(ccusage:*)",
+      "Bash(ls:*)"
     ],
     "deny": []
   }
