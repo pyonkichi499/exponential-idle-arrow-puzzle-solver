@@ -15,7 +15,8 @@
       "Bash(ccusage --help)",
       "Bash(ccusage session:*)",
       "Bash(ccusage:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(git mv:*)"
     ],
     "deny": []
   }
